@@ -1,0 +1,90 @@
+# Crypteon — standalone Docker Compose.
+#
+# This is the DEFAULT, batteries-included compose file. It builds the static
+# SvelteKit site, serves it with nginx, and publishes it on a host port so you
+# can open it immediately in a browser. No reverse proxy, no external network,
+# no DNS required.
+#
+#   docker compose up -d --build      # build + start in the background
+#   open http://localhost:8080/       # default host port (override via .env)
+#   docker compose logs -f crypteon   # follow logs
+#   docker compose down               # stop + remove
+#
+# Want to deploy behind Traefik / Dokploy with automatic HTTPS instead? Use:
+#   docker compose -f docker-compose.dokploy.yml up -d --build
+#
+# Configuration (copy .env.example to .env to customize):
+#   CRYPTEON_PORT  host port to publish on            (default 8080)
+#   BASE_PATH      subpath the app is served under    (default "" = root)
+#   TZ             container timezone                 (default UTC)
+
+services:
+  crypteon:
+    image: crypteon:latest
+    container_name: crypteon
+    restart: unless-stopped
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_PATH: "${BASE_PATH:-}"
+
+    # Publish the in-container port 80 to a configurable host port.
+    ports:
+      - "${CRYPTEON_PORT:-8080}:80"
+
+    environment:
+      TZ: "${TZ:-UTC}"
+
+    # nginx serves a dedicated /health endpoint (see nginx.conf). The container
+    # is only marked healthy once that responds, so `depends_on: condition:
+    # service_healthy` works for anything you stack on top of it.
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null --tries=1 --timeout=3 http://127.0.0.1/health || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+    # Sensible resource guardrails for a static-site container.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    labels:
+      org.opencontainers.image.title: "Crypteon OSS"
+      org.opencontainers.image.description: "Open-source LLM red-teaming toolkit — 159 transforms, 25 tool surfaces, BYOK AI gateway."
+      org.opencontainers.image.source: "https://github.com/anku0669/crypteon-oss"
+      org.opencontainers.image.url: "https://github.com/anku0669/crypteon-oss"
+      org.opencontainers.image.vendor: "Ankush Bhadwar"
+      org.opencontainers.image.licenses: "MIT"
+
+  # ---------------------------------------------------------------------------
+  # Optional: the Python transform CLI, containerized.
+  #
+  # Disabled by default (lives behind the `cli` profile) so a plain
+  # `docker compose up` only starts the web app. Run a one-off transform with:
+  #
+  #   docker compose run --rm crypteon-cli list
+  #   echo "hello" | docker compose run --rm -T crypteon-cli run --key base64
+  # ---------------------------------------------------------------------------
+  crypteon-cli:
+    image: crypteon-cli:latest
+    profiles: ["cli"]
+    build:
+      context: .
+      dockerfile: Dockerfile.cli
+    # Override with any Crypteon CLI subcommand at `docker compose run` time.
+    command: ["--help"]

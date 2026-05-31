@@ -1,0 +1,32 @@
+# Crypteon — Python transform CLI, containerized.
+#
+# The CLI (crypteon_cli/) shells out to Node to execute the transform catalog
+# in src/transformers via scripts/cli_bridge.js, so this image needs BOTH a
+# Python and a Node runtime. The transformers are pure Node (fs/vm only) — no
+# npm install required.
+#
+# Build:  docker build -f Dockerfile.cli -t crypteon-cli:latest .
+# Run:    docker run --rm crypteon-cli:latest list
+#         echo "hello world" | docker run --rm -i crypteon-cli:latest run --key base64
+
+FROM python:3.12-slim
+
+# Node.js runtime for the transform bridge.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install the CLI as a console script (`crypteon`).
+COPY pyproject.toml README.md ./
+COPY crypteon_cli ./crypteon_cli
+RUN pip install --no-cache-dir .
+
+# The Node bridge + transform catalog the CLI executes at runtime.
+COPY scripts ./scripts
+COPY src/transformers ./src/transformers
+
+# `crypteon` is the entry point declared in pyproject [project.scripts].
+ENTRYPOINT ["crypteon"]
+CMD ["--help"]

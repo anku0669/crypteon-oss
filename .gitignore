@@ -1,0 +1,14 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# build output
+app/build/
+app/.svelte-kit/
+desktop/renderer/
+dist-desktop/
+
+# misc
+*.log
+.DS_Store
+.env

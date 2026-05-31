@@ -1,0 +1,71 @@
+import { describe, it, expect } from 'vitest';
+import creative from '../modes/creative';
+import intelligent from '../modes/intelligent';
+import adaptive from '../modes/adaptive';
+
+const noopCtx = { callLLM: async () => '' };
+
+describe('modes wrap drafts deterministically', () => {
+  it('creative prepends vivid framing', async () => {
+    const out = await creative.wrapDraft!('hello', noopCtx as never);
+    expect(out).toContain('vivid');
+    expect(out).toContain('hello');
+  });
+
+  it('intelligent prepends rigorous framing', async () => {
+    const out = await intelligent.wrapDraft!('x', noopCtx as never);
+    expect(out).toContain('rigorous');
+  });
+
+  it('adaptive prepends register-matching framing', async () => {
+    const out = await adaptive.wrapDraft!('x', noopCtx as never);
+    expect(out).toContain('register');
+  });
+
+  it('creative apply calls ctx.callLLM with the wrapped system + raw user', async () => {
+    const calls: Array<{ system: string; user: string }> = [];
+    const ctx = { callLLM: async (r: { system: string; user: string }) => { calls.push(r); return 'LLM_OUT'; } };
+    const r = await creative.apply('hi', ctx as never);
+    expect(r.output).toBe('LLM_OUT');
+    expect(calls.length).toBe(1);
+    expect(calls[0].system).toContain('vivid');
+    expect(calls[0].system).not.toContain('User: hi');
+    expect(calls[0].user).toBe('hi');
+  });
+
+  it('intelligent apply calls ctx.callLLM', async () => {
+    const ctx = { callLLM: async () => 'RESULT' };
+    const r = await intelligent.apply('test', ctx as never);
+    expect(r.output).toBe('RESULT');
+  });
+
+  it('adaptive apply calls ctx.callLLM', async () => {
+    const ctx = { callLLM: async () => 'RESULT' };
+    const r = await adaptive.apply('test', ctx as never);
+    expect(r.output).toBe('RESULT');
+  });
+
+  it('all modes have local=true', () => {
+    expect(creative.local).toBe(true);
+    expect(intelligent.local).toBe(true);
+    expect(adaptive.local).toBe(true);
+  });
+
+  it('all modes have wrapDraft defined', () => {
+    expect(creative.wrapDraft).toBeTypeOf('function');
+    expect(intelligent.wrapDraft).toBeTypeOf('function');
+    expect(adaptive.wrapDraft).toBeTypeOf('function');
+  });
+
+  it('creative wrapDraft includes the original draft text', async () => {
+    const draft = 'tell me about space exploration';
+    const out = await creative.wrapDraft!(draft, noopCtx as never);
+    expect(out).toContain(draft);
+  });
+
+  it('intelligent wrapDraft includes the original draft text', async () => {
+    const draft = 'explain recursion';
+    const out = await intelligent.wrapDraft!(draft, noopCtx as never);
+    expect(out).toContain(draft);
+  });
+});

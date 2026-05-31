@@ -1,0 +1,40 @@
+---
+title: Privacy
+description: What leaves your browser, what doesn't, and why.
+category: policy
+order: 1
+---
+
+# Privacy
+
+Crypteon is local-first. The things most red-team tools get wrong about privacy,
+we try to get right. Here's what the app actually does:
+
+## In-memory tool state
+
+Inputs, outputs, and intermediate state for every tool live in Svelte `$state`
+inside your browser tab. Reloading the tab loses unsaved state (by design).
+Favorites and settings persist to `localStorage` — nothing else.
+
+## BYOK-only AI calls
+
+PromptCraft and Anti-Classifier make HTTPS calls from your browser
+directly to whichever AI provider you configured. Provider credentials
+live in `localStorage` under `crypteon.providers` and never touch a
+Crypteon server (because there isn't one — the site is static HTML + JS).
+
+## No telemetry
+
+Crypteon ships no analytics SDK, no error reporter, and no "anonymous
+usage" beacon. The only outbound network traffic is the direct call
+from your browser to the AI provider you configured.
+
+## Session log is downloadable, not uploadable
+
+The History drawer logs each run in-memory for your current tab. Download it
+as JSON if you want a record. It is never transmitted anywhere.
+
+## No hidden telemetry
+
+There is no pixel, no beacon, no third-party analytics. If you disagree, the
+source is open — grep it.

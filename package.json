@@ -1,0 +1,40 @@
+{
+  "name": "crypteon-oss",
+  "version": "2.6.0",
+  "description": "Open-source LLM red-teaming toolkit. 159 transforms, 25 tool surfaces, BYOK gateway. Static site, runs in your browser.",
+  "author": "Ankush Bhadwar",
+  "scripts": {
+    "build": "cd app && npm ci && npm run build",
+    "dev": "cd app && npm run dev",
+    "check": "cd app && npm run check",
+    "test": "cd app && npx vitest run",
+    "test:unit": "cd app && npx vitest run",
+    "desktop": "cd desktop && npm install && npm start",
+    "desktop:mac": "cd desktop && npm install && npm run dist:mac",
+    "desktop:win": "cd desktop && npm install && npm run dist:win",
+    "desktop:linux": "cd desktop && npm install && npm run dist:linux",
+    "desktop:all": "cd desktop && npm install && npm run dist:all"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anku0669/crypteon-oss.git"
+  },
+  "homepage": "https://github.com/anku0669/crypteon-oss",
+  "bugs": "https://github.com/anku0669/crypteon-oss/issues",
+  "license": "MIT",
+  "keywords": [
+    "llm",
+    "red-team",
+    "jailbreak",
+    "ai-safety",
+    "prompt-engineering",
+    "steganography",
+    "cipher",
+    "encoder",
+    "decoder",
+    "byok",
+    "static-site",
+    "svelte",
+    "sveltekit"
+  ]
+}

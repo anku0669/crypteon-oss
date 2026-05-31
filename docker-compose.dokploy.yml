@@ -1,0 +1,127 @@
+# Crypteon — Docker Compose for Dokploy, fully self-contained.
+#
+# Why this file is fully manual (not relying on Dokploy's Domains UI):
+#   Dokploy's "Domains UI auto-labeling" + in-compose labels is a recipe for
+#   partial configurations. Specifically, Dokploy does NOT auto-add:
+#     - `traefik.docker.network=dokploy-network` (routing when multi-homed)
+#     - matching HTTP→HTTPS redirect routers
+#   …yet relying on it to add the `tls.certresolver` label means your cert
+#   either attaches to the wrong router or never gets requested at all.
+#   Result: 404 first (wrong network routing), then "connection not secure"
+#   (cert never issued / self-signed default served instead of Let's Encrypt).
+#
+#   This file fixes both by declaring EVERY Traefik label in-repo, driven by
+#   a single `DOMAIN` env var the user sets once in Dokploy's Environment tab.
+#   No Domains UI entry required. Idempotent, predictable, code-reviewable.
+#
+# DOKPLOY (primary target) — step-by-step:
+#   1. Add this repo as a Docker Compose app in Dokploy.
+#   2. Environment tab → set:
+#        DOMAIN=crypteon.your-domain.com    ← REQUIRED for HTTPS routing
+#        BASE_PATH=                         ← optional, leave empty
+#        TZ=UTC                             ← optional
+#   3. Ensure DNS A record points DOMAIN at your VPS public IP (required
+#      BEFORE first deploy, otherwise Let's Encrypt HTTP-01 challenge fails).
+#   4. **Do NOT add a Domain entry in Dokploy's Domains tab** — this file
+#      does it. Adding one there duplicates labels and breaks cert issuance.
+#   5. Deploy. Traefik routes + Let's Encrypt issues a cert within ~30s.
+#
+# STANDALONE (no Dokploy):
+#   See DEPLOY.md — uses `docker build` + `docker run` directly. This compose
+#   file requires the external `dokploy-network` which only exists after
+#   Dokploy's installer has run.
+
+services:
+  crypteon:
+    # Default: build from source (Dokploy ergonomic). For a faster deploy you
+    # can swap to the prebuilt GHCR image instead — comment out the `build:`
+    # block below and uncomment this line:
+    #   image: ghcr.io/anku0669/crypteon-oss:latest
+    image: crypteon:latest
+    restart: unless-stopped
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_PATH: "${BASE_PATH:-}"
+    environment:
+      TZ: "${TZ:-UTC}"
+
+    # `expose` keeps port 80 internal to Docker networks. Traefik reaches it
+    # via dokploy-network. No host publish — safe on multi-app VPSes.
+    expose:
+      - "80"
+
+    # Robust healthcheck — Traefik refuses to route to unhealthy containers.
+    # Explicit --tries / --timeout prevents slow-start false-negatives.
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null --tries=1 --timeout=3 http://127.0.0.1/health || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+    networks:
+      - default
+      - dokploy-network
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    labels:
+      # -------- Core Traefik wiring --------
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+
+      # -------- The service that actually carries traffic --------
+      # Named explicitly so our routers can pin to it with `.service=crypteon-app`.
+      # Dokploy's compose engine auto-generates additional services from
+      # `expose:` directives (e.g. `<project>-crypteon-<rev>-web`). Without an
+      # explicit router→service binding, Traefik sees multiple candidate
+      # services on the same container and refuses to route ("cannot be
+      # linked automatically with multiple Services").
+      - "traefik.http.services.crypteon-app.loadbalancer.server.port=80"
+
+      # -------- HTTPS router + Let's Encrypt TLS --------
+      # The explicit `.service=crypteon-app` binding is THE critical fix —
+      # it disambiguates from Dokploy's auto-generated services.
+      - "traefik.http.routers.crypteon-app-secure.rule=Host(`${DOMAIN:-crypteon.localhost}`)"
+      - "traefik.http.routers.crypteon-app-secure.entrypoints=websecure"
+      - "traefik.http.routers.crypteon-app-secure.tls=true"
+      - "traefik.http.routers.crypteon-app-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.crypteon-app-secure.service=crypteon-app"
+
+      # -------- HTTP → HTTPS redirect --------
+      # Same service pin, but traffic gets redirected before reaching it.
+      - "traefik.http.routers.crypteon-app-http.rule=Host(`${DOMAIN:-crypteon.localhost}`)"
+      - "traefik.http.routers.crypteon-app-http.entrypoints=web"
+      - "traefik.http.routers.crypteon-app-http.service=crypteon-app"
+      - "traefik.http.routers.crypteon-app-http.middlewares=crypteon-app-https-redirect"
+      - "traefik.http.middlewares.crypteon-app-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.crypteon-app-https-redirect.redirectscheme.permanent=true"
+
+      # -------- OCI metadata --------
+      - "org.opencontainers.image.title=Crypteon OSS"
+      - "org.opencontainers.image.description=Open-source LLM red-teaming toolkit — 159 transforms, 25 tool surfaces, BYOK AI gateway."
+      - "org.opencontainers.image.source=https://github.com/anku0669/crypteon-oss"
+      - "org.opencontainers.image.url=https://github.com/anku0669/crypteon-oss"
+      - "org.opencontainers.image.licenses=MIT"
+
+networks:
+  default:
+    driver: bridge
+  dokploy-network:
+    external: true

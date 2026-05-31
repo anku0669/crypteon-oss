@@ -1,0 +1,263 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Crypteon — light: warm neutrals + vivid orange primary + steel accent */
+    --background: 30 25% 98%;
+    --foreground: 20 14% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 10%;
+
+    --primary: 22 92% 52%;
+    --primary-foreground: 30 25% 98%;
+
+    --secondary: 30 18% 94%;
+    --secondary-foreground: 20 14% 14%;
+
+    --muted: 30 18% 94%;
+    --muted-foreground: 20 8% 38%;
+
+    --accent: 210 22% 28%;
+    --accent-foreground: 30 25% 98%;
+
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 30 25% 98%;
+
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 22 92% 52%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Crypteon — dark: deep warm charcoal + glowing orange + cool steel accent */
+    --background: 20 18% 7%;
+    --foreground: 30 20% 95%;
+
+    --card: 22 14% 11%;
+    --card-foreground: 30 20% 95%;
+
+    --popover: 22 14% 11%;
+    --popover-foreground: 30 20% 95%;
+
+    --primary: 24 96% 60%;
+    --primary-foreground: 20 18% 7%;
+
+    --secondary: 22 10% 17%;
+    --secondary-foreground: 30 20% 95%;
+
+    --muted: 22 10% 17%;
+    --muted-foreground: 28 10% 64%;
+
+    --accent: 210 50% 70%;
+    --accent-foreground: 20 18% 7%;
+
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 30 20% 95%;
+
+    --border: 22 10% 22%;
+    --input: 22 10% 22%;
+    --ring: 24 96% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+  }
+
+  /*
+   * Tell the browser whether to render native widgets (the OS dropdown popup
+   * for <select>, scrollbars, etc.) using light or dark UI colors. Without
+   * this, the OS picker defaults to light even on our dark theme — looks
+   * jarring against our card backgrounds.
+   */
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+
+  /*
+   * Crypteon select trigger — replaces the default OS arrow with a chevron in
+   * the theme's accent color so the trigger blends with our cards. The OS
+   * dropdown popup itself is controlled by `color-scheme` above.
+   */
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m6 9 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 0.75rem;
+    padding-right: 1.85rem !important;
+  }
+  select::-ms-expand { display: none; }
+  select option {
+    background-color: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.35);
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-card/60 border border-foreground/5 backdrop-blur-glass;
+  }
+
+  /* Crypteon themed scrollbar — apply .crypteon-scroll on any scrollable region */
+  /* Hide default browser disclosure triangle on <details><summary> — we use a custom chevron */
+  summary { list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+
+  .crypteon-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .crypteon-scroll::-webkit-scrollbar-track { background: transparent; }
+  .crypteon-scroll::-webkit-scrollbar-thumb { background: hsl(var(--muted) / 0.4); border-radius: 3px; }
+  .crypteon-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted) / 0.7); }
+  .crypteon-scroll { scrollbar-width: thin; scrollbar-color: hsl(var(--muted) / 0.4) transparent; }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .fade-in {
+    animation: fadeIn 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(2px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes chat-bubble-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .chat-bubble-enter {
+    animation: chat-bubble-in 180ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Safe-area utilities for iPhone notch + Android nav bar.
+ *
+ * Apply .pt-safe to the top of fixed/sticky headers and .pb-safe to
+ * footers so content respects the device's insets (`viewport-fit=cover`
+ * is set in app.html). Falls back to `0` when no inset is reported.
+ */
+@layer utilities {
+  .pt-safe { padding-top: env(safe-area-inset-top, 0); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0); }
+  .pl-safe { padding-left: env(safe-area-inset-left, 0); }
+  .pr-safe { padding-right: env(safe-area-inset-right, 0); }
+}
+
+/* ============================================================
+   Desktop (Electron) — native macOS polish.
+   Scoped to .is-desktop / .platform-darwin (added by the Electron
+   preload), so the web + Docker builds are completely unaffected.
+   ============================================================ */
+.is-desktop {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+    system-ui, "Segoe UI", sans-serif;
+}
+.is-desktop {
+  scroll-behavior: smooth;
+}
+
+/* Frameless macOS title bar: the sticky header is the drag region; its
+   interactive children opt back out so clicks still work. */
+.platform-darwin header.sticky {
+  -webkit-app-region: drag;
+}
+.platform-darwin header.sticky a,
+.platform-darwin header.sticky button,
+.platform-darwin header.sticky input,
+.platform-darwin header.sticky [role="button"] {
+  -webkit-app-region: no-drag;
+}
+/* Push the logo clear of the inset traffic-light buttons. */
+.platform-darwin header.sticky > .container {
+  padding-left: 84px;
+}
+
+/* Thin, modern overlay scrollbars. */
+.is-desktop ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.is-desktop ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.28);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.is-desktop ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+  background-clip: content-box;
+}
+.is-desktop ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Module bar (TabRail) refresh — deeper glass, lift on hover, glowing
+   active pill. Targets the existing markup via stable selectors. */
+.is-desktop nav[aria-label="Tools"] > ol {
+  padding: 6px;
+  gap: 6px;
+  border-radius: 18px;
+  background: hsl(var(--card) / 0.55);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid hsl(var(--border) / 0.7);
+  box-shadow: 0 10px 34px -14px hsl(var(--primary) / 0.22),
+    inset 0 1px 0 hsl(0 0% 100% / 0.05);
+}
+.is-desktop nav[aria-label="Tools"] a {
+  border-radius: 12px;
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.16s ease, color 0.16s ease;
+  will-change: transform;
+}
+.is-desktop nav[aria-label="Tools"] a:hover {
+  transform: translateY(-1px);
+}
+.is-desktop nav[aria-label="Tools"] a:active {
+  transform: translateY(0);
+}
+/* The sliding primary indicator: rounder with a soft glow. */
+.is-desktop nav[aria-label="Tools"] ol > span[aria-hidden="true"] {
+  border-radius: 12px !important;
+  box-shadow: 0 6px 18px -6px hsl(var(--primary) / 0.55);
+}
+
+/* App-wide tactile feel: gentle transition on interactive elements. */
+.is-desktop button:not(:disabled),
+.is-desktop a[role="button"],
+.is-desktop [data-tile] {
+  transition: transform 0.14s ease, background-color 0.16s ease,
+    color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}

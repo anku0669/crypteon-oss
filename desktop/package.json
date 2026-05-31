@@ -1,0 +1,79 @@
+{
+  "name": "crypteon-desktop",
+  "productName": "Crypteon",
+  "version": "2.6.0",
+  "description": "Crypteon — open-source LLM red-teaming toolkit, packaged as a native desktop app.",
+  "author": "Ankush Bhadwar",
+  "license": "MIT",
+  "private": true,
+  "main": "src/main.js",
+  "homepage": "https://github.com/anku0669/crypteon-oss",
+  "scripts": {
+    "build:renderer": "node scripts/build-renderer.mjs",
+    "start": "npm run build:renderer && electron .",
+    "pack": "npm run build:renderer && electron-builder --dir",
+    "dist": "npm run build:renderer && electron-builder",
+    "dist:mac": "npm run build:renderer && electron-builder --mac",
+    "dist:win": "npm run build:renderer && electron-builder --win",
+    "dist:linux": "npm run build:renderer && electron-builder --linux",
+    "dist:all": "npm run build:renderer && electron-builder -mwl"
+  },
+  "devDependencies": {
+    "electron": "^31.7.6",
+    "electron-builder": "^26.6.0"
+  },
+  "build": {
+    "appId": "in.crypteon.app",
+    "productName": "Crypteon",
+    "copyright": "Copyright © 2026 Ankush Bhadwar",
+    "directories": {
+      "output": "../dist-desktop",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icon.icns",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "Crypteon ${version}",
+      "contents": [
+        { "x": 140, "y": 200, "type": "file" },
+        { "x": 400, "y": 200, "type": "link", "path": "/Applications" }
+      ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Crypteon"
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Development",
+      "maintainer": "Ankush Bhadwar",
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
+      ]
+    }
+  }
+}
