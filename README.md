@@ -48,18 +48,6 @@
 
 ---
 
-<p>
-  <img src="docs/img/screenshot-promptcraft2.png" alt="PromptCraft multi-step viz" width="100%">
-</p>
-<p align="center">
-  <img src="docs/img/Promp-Craft-TAP.png" alt="PromptCraft multi-step viz" width="100%">
-</p>
-<p align="center">
-  <sub>Left: 159 transformers, encode + decode, options per transform. Middle: PromptCraft multi-step viz (TAP tree shown). Right: HarmBench heuristic scoring with per-category breakdown.</sub>
-</p>
-
----
-
 ## What it is
 
 Crypteon bundles 159 text transformers (encodings, classical ciphers, Unicode tricks, steganography, ancient scripts) with 26 specialized tool surfaces. The **Campaign** front door is the one-shot way in: type a goal, pick a target once, and Crypteon fans your goal across many attack strategies, judges each with an LLM judge, and shows a graded ASR report you can export. Behind it sit ten technique workbenches (Transform, Decode, Emoji stego, Gibberish, Tokenizer, Tokenade, Bijection, Fuzzer, PromptCraft, Anti-Classifier) and fifteen red-team labs covering the 2024 to 2026 jailbreak literature (HarmBench, StrongREJECT, JailbreakBench, indirect injection, glitch tokens, adversarial suffixes, defense fingerprinting, watermark forensics). It is the lab bench for adversarial-prompt and encoding research.
@@ -130,7 +118,7 @@ npm run dev          # http://localhost:5173 with hot reload
 npm run build        # static bundle in app/build/
 ```
 
-Prereqs: Node 20.19+ or 22.12+ (not plain “Node 20”), npm. Install deps in app/, then npm run dev.
+Prereqs: Node 20.19+ or 22.12+ (not plain "Node 20"), npm. Install deps in app/, then npm run dev.
 Optional: [`uv`](https://docs.astral.sh/uv/) for the Python CLI.
 </details>
 
@@ -185,9 +173,6 @@ Five paths, all free for a Crypteon-scale static site:
 | **Raspberry Pi at home** | `docker run` the `linux/arm64` image. Reach from your phone via Tailscale Funnel. | Zero monthly cost beyond electricity |
 
 Crypteon never phones home. Your hosted instance is your own.
-
----
-
 
 ---
 
@@ -354,4 +339,4 @@ Crypteon OSS bundles small red-team corpora (glitch tokens, adversarial suffixes
   <strong>Author:</strong> Ankush Bhadwar
 </p>
 
-> P.S. — A tip of the hat to [elder-plinius/P4RS3LT0NGV3](https://github.com/elder-plinius/P4RS3LT0NGV3): every model in this toolkit was already jailbroken there before our `npm install` finished, so consider Crypteon OSS the release engineering on his hobby.
+> P.S. — A tip of the hat to [elder-plinius/P4RS3LT0NGV3](https://github.com/elder-plinius/P4RS3LT0NGV3): every model in this toolkit was already jailbroken there before our `npm install` finished, so consider Crypteon OSS the 
